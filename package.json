@@ -1,6 +1,6 @@
 {
   "name": "promise-thunk",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "promise thunk",
   "main": "promise-thunk.js",
   "scripts": {
@@ -8,8 +8,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/LightSpeedWorks/promise-thunk.git"
+    "url": "LightSpeedWorks/promise-thunk"
   },
+  "bugs": {
+    "url": "https://github.com/LightSpeedWorks/promise-thunk/issues"
+  },
+  "homepage": "https://github.com/LightSpeedWorks/promise-thunk",
   "keywords": [
     "promise",
     "thunk",
@@ -19,9 +23,5 @@
     "co"
   ],
   "author": "LightSpeedC",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/LightSpeedWorks/promise-thunk/issues"
-  },
-  "homepage": "https://github.com/LightSpeedWorks/promise-thunk"
+  "license": "MIT"
 }
