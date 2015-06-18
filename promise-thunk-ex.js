@@ -111,11 +111,13 @@
     function (val) { console.log('sleep4 ', null, val, 401); },
     function (err) { console.log('sleep4  err =', err, 402); });
 
-  sleep5(1000, 'sleep5a')(function (err, val) { console.log('sleep5a', err, val, 501); });
+  sleep5(1000, 'sleep5a')
+  (function (err, val) { console.log('sleep5a', err, val, 501); })
+  .catch(function (err) { console.log('sleep5a err =', err, 502); });
 
   sleep5(1000, 'sleep5b').then(
-    function (val) { console.log('sleep5b', null, val, 502); },
-    function (err) { console.log('sleep5b err =', err, 503); });
+    function (val) { console.log('sleep5b', null, val, 505); },
+    function (err) { console.log('sleep5b err =', err, 506); });
 
   var p5 = sleep5(1000, 'sleep5 ')
   (function (err, val) { console.log('sleep5u', err, val, 510); return 'sleep5u'; })
