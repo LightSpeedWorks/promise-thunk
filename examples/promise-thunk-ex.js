@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  var PromiseThunk = require('./promise-thunk');
+  var PromiseThunk = require('../promise-thunk');
 
   var slice = [].slice;
 
