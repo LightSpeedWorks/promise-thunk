@@ -154,7 +154,8 @@ this.PromiseThunk = function () {
     // thunk(cb)
     function thunk(cb) {
       if (typeof cb !== 'function')
-        throw new TypeError('callback must be a function');
+        cb = function () {};
+        //throw new TypeError('callback must be a function');
 
       var p = PromiseThunk();
       thunk.$callbacks.push([undefined, undefined,
