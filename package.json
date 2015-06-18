@@ -1,6 +1,6 @@
 {
   "name": "promise-thunk",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "promise thunk",
   "main": "promise-thunk.js",
   "scripts": {
