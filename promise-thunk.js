@@ -78,31 +78,25 @@ this.PromiseThunk = function () {
   // nextTick(ctx, fn, fnLow)
   function nextTick(ctx, fn, fnLow) {
     if (typeof fn === 'function')
-      tasksHighPrio.push([ctx, fn]);
+      tasksHighPrio.push({ctx:ctx, fn:fn});
 
     if (typeof fnLow === 'function')
-      tasksLowPrio.push([ctx, fnLow]);
+      tasksLowPrio.push({ctx:ctx, fn:fnLow});
 
     if (nextTickProgress) return;
 
     nextTickProgress = true;
 
     nextTickDo(function () {
-      var ctx, fn, pair;
+      var task;
 
       for (;;) {
-        while (pair = tasksHighPrio.shift()) {
-          ctx = pair[0];
-          fn = pair[1];
-          fn.call(ctx);
-        }
+        while (task = tasksHighPrio.shift())
+          task.fn.call(task.ctx);
 
-        pair = tasksLowPrio.shift();
-        if (!pair) break;
-
-        ctx = pair[0];
-        fn = pair[1];
-        fn.call(ctx);
+        if (task = tasksLowPrio.shift())
+          task.fn.call(task.ctx);
+        else break;
       }
 
       nextTickProgress = false;
@@ -149,7 +143,7 @@ this.PromiseThunk = function () {
           $$reject.call(thunk, err);
         }
       }
-    }
+    } // PromiseThunk
 
     // thunk(cb)
     function thunk(cb) {
@@ -311,7 +305,7 @@ this.PromiseThunk = function () {
     if (isPromise(promise)) {
       var p = PromiseThunk();
       promise.then(
-        function (v) { $$resolve.call(p, v); },
+        function (v) { $$resolve.apply(p, arguments); },
         function (e) { $$reject.apply(p, arguments); });
       return p;
     }
