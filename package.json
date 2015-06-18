@@ -1,0 +1,27 @@
+{
+  "name": "promise-thunk",
+  "version": "0.0.0",
+  "description": "promise thunk",
+  "main": "promise-thunk.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LightSpeedWorks/promise-thunk.git"
+  },
+  "keywords": [
+    "promise",
+    "thunk",
+    "thunkify",
+    "aa",
+    "async-await",
+    "co"
+  ],
+  "author": "LightSpeedC",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LightSpeedWorks/promise-thunk/issues"
+  },
+  "homepage": "https://github.com/LightSpeedWorks/promise-thunk"
+}
