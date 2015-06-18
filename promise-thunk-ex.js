@@ -1,28 +1,5 @@
 // promise-thunk-ex.js
 
-// aa.fork(function *() {}) -> returns p : thenable promise thunk
-// aa(function *() {}) -> returns p : thenable promise thunk
-//   p(function (err, val) {}) -> returns p : thenable promise thunk
-//   p.then(function (val) {}, function (err) {}) -> returns p : thenable promise thunk
-//   p.catch(function (err) {}) -> returns p : thenable promise thunk
-// aa(iterator)
-// aa(generator)
-
-// aa.wrap(function () {}) -> returns wrapped function
-// aa(function () {}) -> returns wrapped function
-
-// aa([e,...]) -> ?
-
-// aa.Promise -> Promise constructor function
-
-// aa.Channel -> Channel constructor function
-// aa.Channel() -> returns ch : channel function
-// aa.Channel(n : number) -> returns ch : channel function
-// aa.Channel(n : number, Type : function) -> returns ch : channel function
-// aa() -> returns ch : channel function
-// aa(n : number) -> returns ch : channel function
-// aa(n : number, Type : function) -> returns ch : channel function
-
 (function () {
   'use strict';
 
