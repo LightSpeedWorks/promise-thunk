@@ -55,6 +55,7 @@ this.PromiseThunk = function () {
       this.tail = this.tail[1] = [x, null];
     else
       this.tail = this.head = [x, null];
+    return this;
   });
   // Queue#shift()
   setValue(Queue.prototype, 'shift', function shift() {
