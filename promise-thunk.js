@@ -10,6 +10,7 @@ this.PromiseThunk = function () {
   var ARGS_ERR = 0;
   var ARGS_VAL = 1;
 
+  var COLOR_OK     = typeof window !== 'undefined' ? '' : '\x1b[32m';
   var COLOR_ERROR  = typeof window !== 'undefined' ? '' : '\x1b[35m';
   var COLOR_NORMAL = typeof window !== 'undefined' ? '' : '\x1b[m';
 
@@ -109,67 +110,77 @@ this.PromiseThunk = function () {
   function PROMISE_THEN() {}
 
   // PromiseThunk(setup(resolve, reject))
-  function PromiseThunk(setup) {
+  function PromiseThunk(setup, val) {
     if (setup && typeof setup.then === 'function')
       return $$convert(setup);
 
-    thunk.$callbacks = new Queue();
-    thunk.$state = STATE_UNRESOLVED;
-    thunk.$args = undefined;
-    thunk.$handled = false;
+    $this.$callbacks = new Queue();
+    $this.$state = STATE_UNRESOLVED;
+    $this.$args = undefined;
+    $this.$handled = false;
 
     if (setProto)
-      setProto(thunk, PromiseThunk.prototype);
+      setProto($this, PromiseThunk.prototype);
     else {
-      if (thunk.then     !== $$then)
-          thunk.then     =   $$then;
-      if (thunk['catch'] !== $$catch)
-          thunk['catch'] =   $$catch;
-      if (thunk.toString !== $$toString)
-          thunk.toString =   $$toString;
+      if ($this.then     !== $$then)
+          $this.then     =   $$then;
+      if ($this['catch'] !== $$catch)
+          $this['catch'] =   $$catch;
+      if ($this.toString !== $$toString)
+          $this.toString =   $$toString;
     }
 
     if (typeof setup === 'function') {
       if (setup === PROMISE_RESOLVE)
-        $$resolve.call(thunk, arguments[1]);
+        $$resolve.call($this, val);
       else if (setup === PROMISE_REJECT)
-        $$reject.call(thunk, arguments[1]);
+        $$reject.call($this, val);
       else {
         // setup(resolve, reject)
         try {
-          setup.call(thunk,
-            function resolve() { return $$resolve.apply(thunk, arguments); },
-            function reject()  { return $$reject.apply(thunk, arguments); });
+          setup.call($this,
+            function resolve(v) { return $$resolve.call($this, v); },
+            function reject(e)  { return $$reject.call($this, e); });
         } catch (err) {
-          $$reject.call(thunk, err);
+          $$reject.call($this, err);
         }
       }
     } // PromiseThunk
 
-    // thunk(cb)
-    function thunk(cb) {
+    // $this(cb) === thunk
+    function $this(cb) {
       if (typeof cb !== 'function')
         cb = function () {};
-        //throw new TypeError('callback must be a function');
 
       var p = PromiseThunk();
-      thunk.$callbacks.push([undefined, undefined,
+      $this.$callbacks.push([undefined, undefined,
         function (err, val) {
           try {
-            if (err) $$resolve.call(p, cb(err));
-            else     $$resolve.call(p, cb.apply(null, arguments));
-          } catch (e) { $$reject.call(p, e); } }
+            $$resolve.call(p, cb(err, val));
+          } catch (e) {
+            if (!err) return $$reject.call(p, e);
+            console.log(COLOR_ERROR + 'Unhandled callback error: ' + err2str(e) + COLOR_NORMAL);
+            $$reject.call(p, err);
+          }
+        }
       ]);
-      nextTick(thunk, $$fire);
+      nextTick($this, $$fire);
       return p;
     }
 
-    return thunk;
+    return $this;
   }
 
   // $$callback(err, val) or $callback(...$args)
   function $$callback() {
-    if (this.$args) return; // already fired
+    if (this.$args) {
+      var err = arguments[ARGS_ERR];
+      if (err) {
+        console.info(COLOR_OK + this + COLOR_NORMAL);
+        console.error(COLOR_ERROR + 'Unhandled 2nd rejection ' + err2str(err) + COLOR_NORMAL);
+      }
+      return; // already fired
+    }
     this.$args = arguments;
     this.$state = arguments[ARGS_ERR] ? STATE_REJECTED : STATE_RESOLVED;
     nextTick(this, $$fire);
@@ -177,24 +188,24 @@ this.PromiseThunk = function () {
 
   // $$resolve(val)
   function $$resolve(val) {
-    var thunk = this;
-    if (thunk.$args) return;
+    if (this.$args) return; // already resolved
+    var $this = this;
 
-    // is promise?
+    // val is promise?
     if (isPromise(val)) {
       val.then(
-        function (v) { $$callback.call(thunk, null, v); },
-        function (e) { $$callback.apply(thunk, arguments); });
+        function (v) { $$callback.call($this, null, v); },
+        function (e) { $$callback.call($this, e); });
       return;
     }
 
-    // is function? must be thunk.
+    // val is function? must be thunk.
     if (typeof val === 'function') {
-      val(function (e) { $$callback.apply(thunk, arguments); });
+      val(function (e, v) { $$callback. call($this, e, v); });
       return;
     }
 
-    $$callback.call(thunk, null, val);
+    $$callback.call($this, null, val);
   } // $$resolve
 
   // $$reject(err)
@@ -208,9 +219,14 @@ this.PromiseThunk = function () {
     var $callbacks = this.$callbacks;
     if (!$args) return; // not yet fired
     while (elem = $callbacks.shift()) {
-      this.$handled = true;
-      if (elem[STATE_THUNK]) elem[STATE_THUNK].apply(null, $args);
-      else if (elem[$state]) elem[$state]($args[$state]);
+      if (elem[STATE_THUNK]) {
+        this.$handled = true;
+        elem[STATE_THUNK].apply(null, $args);
+      }
+      else if (elem[$state]) {
+        if ($state === STATE_REJECTED) this.$handled = true;
+        elem[$state]($args[$state]);
+      }
     }
     nextTick(this, null, $$checkUnhandledRejection);
   } // $$fire
@@ -219,17 +235,16 @@ this.PromiseThunk = function () {
   function $$checkUnhandledRejection() {
     var $args = this.$args;
     if (this.$state === STATE_REJECTED && !this.$handled) {
-      console.error(COLOR_ERROR + 'Unhandled rejection ' +
-          ($args[ARGS_ERR] instanceof Error ? $args[ARGS_ERR].stack ||
-           $args[ARGS_ERR] : $args[ARGS_ERR]) +
-          COLOR_NORMAL);
+      console.error(COLOR_ERROR + 'Unhandled rejection ' + err2str($args[ARGS_ERR]) + COLOR_NORMAL);
       // or throw $args[0];
       // or process.emit...
     }
   } // $$checkUnhandledRejection
 
   // PromiseThunk#then(res, rej)
-  setValue(PromiseThunk.prototype, 'then', function then(res, rej) {
+  var $$then = then;
+  setValue(PromiseThunk.prototype, 'then', then);
+  function then(res, rej) {
     if (res && typeof res !== 'function')
       throw new TypeError('resolved must be a function');
     if (rej && typeof rej !== 'function')
@@ -237,36 +252,60 @@ this.PromiseThunk = function () {
 
     var p = PromiseThunk();
     this.$callbacks.push([
-      function (err) { try { $$resolve.call(p, rej(err)); } catch (e) { $$reject.call(p, e); } },
-      function (val) { try { $$resolve.call(p, res(val)); } catch (e) { $$reject.call(p, e); } }
+      function (err) {
+        try { // then err
+          if (rej) $$resolve.call(p, rej(err));
+          else     $$reject.call(p, err);
+        } catch (e) {
+          $$reject.call(p, err);
+          console.error(COLOR_ERROR + 'Unhandled callback error: ' + err2str(e) + COLOR_NORMAL);
+          $$reject.call(p, e);
+        }
+      },
+      function (val) {
+        try { // then val
+          if (res) $$resolve.call(p, res(val));
+          else     $$resolve.call(p, val)
+        } catch (e) {
+          $$reject.call(p, e);
+        }
+      }
     ]);
     nextTick(this, $$fire);
     return p;
-  }); // then
-  var $$then = PromiseThunk.prototype.then;
+  } // then
 
   // PromiseThunk#catch(rej)
-  setValue(PromiseThunk.prototype, 'catch', function caught(rej) {
-    if (rej && typeof rej !== 'function')
+  var $$catch = caught;
+  setValue(PromiseThunk.prototype, 'catch', caught);
+  function caught(rej) {
+    if (typeof rej !== 'function')
       throw new TypeError('rejected must be a function');
 
     var p = PromiseThunk();
     this.$callbacks.push([
-      function (err) { try { $$resolve.call(p, rej(err)); } catch (e) { $$reject.call(p, e); } }
+      function (err) {
+        try { // catch err
+          $$resolve.call(p, rej(err));
+        } catch (e) {
+          $$reject.call(p, err);
+          console.log('\x1b[41m' + e + '\x1b[m');
+        }
+      }
     ]);
     nextTick(this, $$fire);
     return p;
-  }); // catch
-  var $$catch = PromiseThunk.prototype['catch'];
+  } // catch
 
   // PromiseThunk#toString()
-  setValue(PromiseThunk.prototype, 'toString', function toString() {
+  setValue(PromiseThunk.prototype, 'toString', toString);
+  var $$toString = toString;
+  function toString() {
     return 'PromiseThunk { ' + (
       this.$state === STATE_UNRESOLVED ? '<pending>' :
       this.$state === STATE_RESOLVED ? JSON.stringify(this.$args[ARGS_VAL]) :
       '<rejected> ' + this.$args[ARGS_ERR]) + ' }';
-  }); // toString
-  var $$toString = PromiseThunk.prototype.toString;
+  } // toString
 
   // PromiseThunk.wrap(fn)
   function wrap(fn) {
@@ -310,12 +349,13 @@ this.PromiseThunk = function () {
         function (e) { $$reject.apply(p, arguments); });
       return p;
     }
-    return PromiseThunk(PROMISE_RESOLVE, val);
+    return PromiseThunk(PROMISE_RESOLVE, promise);
   });
   var $$convert = PromiseThunk.convert;
 
   // PromiseThunk.all([p, ...])
-  setValue(PromiseThunk, 'all', function all(promises) {
+  setValue(PromiseThunk, 'all', all);
+  function all(promises) {
     if (isIterator(promises)) promises = makeArrayFromIterator(promises);
     if (!(promises instanceof Array))
       throw new TypeError('promises must be an array');
@@ -334,10 +374,11 @@ this.PromiseThunk = function () {
         }); // promises.forEach
       }
     ); // return PromiseThunk
-  }); // all
+  } // all
 
   // PromiseThunk.race([p, ...])
-  setValue(PromiseThunk, 'race', function race(promises) {
+  setValue(PromiseThunk, 'race', race);
+  function race(promises) {
     if (isIterator(promises)) promises = makeArrayFromIterator(promises);
     if (!(promises instanceof Array))
       throw new TypeError('promises must be an array');
@@ -351,7 +392,7 @@ this.PromiseThunk = function () {
         }); // promises.forEach
       }
     ); // return PromiseThunk
-  }); // race
+  } // race
 
   // isPromise(p)
   setValue(PromiseThunk, 'isPromise', isPromise);
@@ -363,27 +404,29 @@ this.PromiseThunk = function () {
   setValue(PromiseThunk, 'accept', PromiseThunk.resolve);
 
   // PromiseThunk.defer()
-  setValue(PromiseThunk, 'defer', function defer() {
+  setValue(PromiseThunk, 'defer', defer);
+  function defer() {
     var p = PromiseThunk();
     return {promise: p,
             resolve: function resolve() { $$resolve.apply(p, arguments); },
             reject:  function reject()  { $$reject.apply(p, arguments); }};
-  });
+  }
 
   // isIterator(iter)
+  setValue(PromiseThunk, 'isIterator', isIterator);
   function isIterator(iter) {
     return iter && (typeof iter.next === 'function' || isIterable(iter));
   }
-  setValue(PromiseThunk, 'isIterator', isIterator);
 
   // isIterable(iter)
+  setValue(PromiseThunk, 'isIterable', isIterable);
   function isIterable(iter) {
     return iter && typeof Symbol === 'function' && Symbol &&
            Symbol.iterator && typeof iter[Symbol.iterator] === 'function';
   }
-  setValue(PromiseThunk, 'isIterable', isIterable);
 
   // makeArrayFromIterator(iter or array)
+  setValue(PromiseThunk, 'makeArrayFromIterator', makeArrayFromIterator);
   function makeArrayFromIterator(iter) {
     if (iter instanceof Array) return iter;
     if (!isIterator(iter)) return [iter];
@@ -399,14 +442,22 @@ this.PromiseThunk = function () {
     } catch (error) {
       return array;
     }
+  } // makeArrayFromIterator
+
+  function err2str(err) {
+    var msg = err.stack || (err + '');
+    return msg.split('\n').filter(filterExcludeMocha).join('\n');
   }
-  setValue(PromiseThunk, 'makeArrayFromIterator', makeArrayFromIterator);
+
+  function filterExcludeMocha(s) {
+    return !s.match(/node_modules.*mocha/);
+  }
 
   if (typeof module === 'object' && module && module.exports)
     module.exports = PromiseThunk;
 
   setValue(PromiseThunk, 'PromiseThunk', PromiseThunk);
-  setValue(PromiseThunk, 'Promise', Promise);
+  setValue(PromiseThunk, 'Promise', PromiseThunk);
   return PromiseThunk;
 
 }();
