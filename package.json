@@ -1,7 +1,7 @@
 {
   "name": "promise-thunk",
-  "version": "0.0.2",
-  "description": "promise thunk",
+  "version": "0.0.3",
+  "description": "Promise and thunk",
   "main": "promise-thunk.js",
   "scripts": {
     "test": "mocha"
