@@ -11,6 +11,9 @@
 
 # INSTALL:
 
+[![NPM](https://nodei.co/npm/promise-thunk.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/promise-thunk/)
+[![NPM](https://nodei.co/npm-dl/promise-thunk.png?height=2)](https://nodei.co/npm/promise-thunk/)
+
 for node.js or io.js
 
 ```bash
