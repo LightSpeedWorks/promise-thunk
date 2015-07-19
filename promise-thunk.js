@@ -235,6 +235,7 @@ this.PromiseThunk = function () {
   function $$checkUnhandledRejection() {
     var $args = this.$args;
     if (this.$state === STATE_REJECTED && !this.$handled) {
+      console.info(COLOR_OK + this + COLOR_NORMAL);
       console.error(COLOR_ERROR + 'Unhandled rejection ' + err2str($args[ARGS_ERR]) + COLOR_NORMAL);
       // or throw $args[0];
       // or process.emit...
