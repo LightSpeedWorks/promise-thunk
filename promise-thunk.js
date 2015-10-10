@@ -308,28 +308,65 @@ this.PromiseThunk = function () {
       '<rejected> ' + this.$args[ARGS_ERR]) + ' }';
   } // toString
 
-  // PromiseThunk.wrap(fn)
-  function wrap(fn) {
+  // PromiseThunk.promisify(fn)
+  setValue(PromiseThunk, 'promisify', promisify);
+  setValue(PromiseThunk, 'wrap',      promisify);
+  function promisify(fn) {
     if (typeof fn !== 'function')
-      throw new TypeError('wrap: fn must be a function');
+      throw new TypeError('promisify: argument must be a function');
 
-    return function () {
-      var $args = slice.call(arguments);
+    return function promisified() {
+      var args = arguments;
       return PromiseThunk(function (res, rej) {
-        fn.apply(null, $args.concat(
-          function (err, val) {
-            try {
-              if (err) rej(err);
-              else     res(val);
-            } catch (e) {
-              rej(e);
+        args[args.length++] = function callback(err, val) {
+          try {
+            if (err instanceof Error) return rej(err);
+            switch (arguments.length) {
+              // normal node style callback
+              case 2: return err ? rej(err) : res(val);
+              // fs.exists like callback
+              case 1: return res(err);
+              // unknown callback
+              case 0: return res();
+              // child_process.exec like callback
+              default: return res(slice.call(arguments, err == null ? 1 : 0));
             }
-        }));
+          } catch (e) { rej(e); }
+        };
+        fn.apply(null, args);
       });
-    }
-  } // wrap
-  setValue(PromiseThunk, 'wrap',     wrap);
-  setValue(PromiseThunk, 'thunkify', wrap);
+    };
+  } // promisify
+
+  // PromiseThunk.thunkify(fn)
+  setValue(PromiseThunk, 'thunkify',  thunkify);
+  function thunkify(fn) {
+    if (typeof fn !== 'function')
+      throw new TypeError('thunkify: argument must be a function');
+
+    return function thunkified() {
+      var args = arguments;
+      return function thunk(cb) {
+        args[args.length++] = function callback(err, val) {
+          try {
+            if (err instanceof Error)
+              return cb.apply(this, arguments);
+            switch (arguments.length) {
+              // normal node style callback
+              case 2: return cb(err, val);
+              // fs.exists like callback
+              case 1: return cb(null, err);
+              // unknown callback
+              case 0: return cb();
+              // child_process.exec like callback
+              default: return cb(null, slice.call(arguments, err == null ? 1 : 0));
+            }
+          } catch (e) { cb(e); }
+        };
+        fn.apply(null, args);
+      };
+    };
+  } // thunkify
 
   // PromiseThunk.resolve(val)
   setValue(PromiseThunk, 'resolve', function resolve(val) {
@@ -418,14 +455,14 @@ this.PromiseThunk = function () {
   // isIterator(iter)
   setValue(PromiseThunk, 'isIterator', isIterator);
   function isIterator(iter) {
-    return iter && (typeof iter.next === 'function' || isIterable(iter));
+    return !!iter && (typeof iter.next === 'function' || isIterable(iter));
   }
 
   // isIterable(iter)
   setValue(PromiseThunk, 'isIterable', isIterable);
   function isIterable(iter) {
-    return iter && typeof Symbol === 'function' && Symbol &&
-           Symbol.iterator && typeof iter[Symbol.iterator] === 'function';
+    return !!iter && typeof Symbol === 'function' &&
+           !!Symbol.iterator && typeof iter[Symbol.iterator] === 'function';
   }
 
   // makeArrayFromIterator(iter or array)
@@ -460,7 +497,7 @@ this.PromiseThunk = function () {
     module.exports = PromiseThunk;
 
   setValue(PromiseThunk, 'PromiseThunk', PromiseThunk);
-  setValue(PromiseThunk, 'Promise', PromiseThunk);
+  setValue(PromiseThunk, 'Promise',      PromiseThunk);
   return PromiseThunk;
 
 }();
