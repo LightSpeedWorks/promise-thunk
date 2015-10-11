@@ -7,6 +7,7 @@ this.PromiseThunk = function () {
   var STATE_REJECTED = 0;
   var STATE_RESOLVED = 1;
   var STATE_THUNK = 2;
+
   var ARGS_ERR = 0;
   var ARGS_VAL = 1;
 
@@ -67,7 +68,7 @@ this.PromiseThunk = function () {
     return x;
   });
 
-  // nextTick(fn)
+  // nextTickDo(fn)
   var nextTickDo = typeof setImmediate === 'function' ? setImmediate :
     typeof process === 'object' && process && typeof process.nextTick === 'function' ? process.nextTick :
     function nextTick(fn) { setTimeout(fn, 0); };
@@ -438,12 +439,6 @@ this.PromiseThunk = function () {
     ); // return PromiseThunk
   } // race
 
-  // isPromise(p)
-  setValue(PromiseThunk, 'isPromise', isPromise);
-  function isPromise(p) {
-    return !!p && typeof p.then === 'function';
-  }
-
   // PromiseThunk.accept(val)
   setValue(PromiseThunk, 'accept', PromiseThunk.resolve);
 
@@ -454,6 +449,12 @@ this.PromiseThunk = function () {
     return {promise: p,
             resolve: function resolve() { $$resolve.apply(p, arguments); },
             reject:  function reject()  { $$reject.apply(p, arguments); }};
+  }
+
+  // isPromise(p)
+  setValue(PromiseThunk, 'isPromise', isPromise);
+  function isPromise(p) {
+    return !!p && typeof p.then === 'function';
   }
 
   // isIterator(iter)
