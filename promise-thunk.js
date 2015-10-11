@@ -156,10 +156,19 @@ this.PromiseThunk = function () {
       $this.$callbacks.push([undefined, undefined,
         function (err, val) {
           try {
-            $$resolve.call(p, cb(err, val));
+            $$resolve.call(p, err instanceof Error || arguments.length === cb.length ? cb.apply(this, arguments) :
+              // normal node style callback
+              cb.length === 2 ? cb.call(this, err, val) :
+              // fs.exists like callback, arguments[0] is value
+              cb.length === 1 ? cb.call(this, val) :
+              // unknown callback
+              cb.length === 0 ? cb.apply(this, arguments) :
+              // child_process.exec like callback
+              val instanceof Array ? cb.apply(this, [err].concat(val)) :
+              cb.apply(this, arguments));
           } catch (e) {
             if (!err) return $$reject.call(p, e);
-            console.log(COLOR_ERROR + 'Unhandled callback error: ' + err2str(e) + COLOR_NORMAL);
+            console.error(COLOR_ERROR + 'Unhandled callback error: ' + err2str(e) + COLOR_NORMAL);
             $$reject.call(p, err);
           }
         }
@@ -320,17 +329,15 @@ this.PromiseThunk = function () {
       return PromiseThunk(function (res, rej) {
         args[args.length++] = function callback(err, val) {
           try {
-            if (err instanceof Error) return rej(err);
-            switch (arguments.length) {
+            return err instanceof Error ? rej(err) :
               // normal node style callback
-              case 2: return err ? rej(err) : res(val);
-              // fs.exists like callback
-              case 1: return res(err);
+              arguments.length === 2 ? (err ? rej(err) : res(val)) :
+              // fs.exists like callback, arguments[0] is value
+              arguments.length === 1 ? res(arguments[0]) :
               // unknown callback
-              case 0: return res();
+              arguments.length === 0 ? res() :
               // child_process.exec like callback
-              default: return res(slice.call(arguments, err == null ? 1 : 0));
-            }
+              res(slice.call(arguments, err == null ? 1 : 0));
           } catch (e) { rej(e); }
         };
         fn.apply(null, args);
@@ -349,18 +356,15 @@ this.PromiseThunk = function () {
       return function thunk(cb) {
         args[args.length++] = function callback(err, val) {
           try {
-            if (err instanceof Error)
-              return cb.apply(this, arguments);
-            switch (arguments.length) {
+            return err instanceof Error || arguments.length === cb.length ? cb.apply(this, arguments) :
               // normal node style callback
-              case 2: return cb(err, val);
-              // fs.exists like callback
-              case 1: return cb(null, err);
+              arguments.length === 2 ? cb(err, val) :
+              // fs.exists like callback, arguments[0] is value
+              arguments.length === 1 ? cb(null, arguments[0]) :
               // unknown callback
-              case 0: return cb();
+              arguments.length === 0 ? cb() :
               // child_process.exec like callback
-              default: return cb(null, slice.call(arguments, err == null ? 1 : 0));
-            }
+              cb(null, slice.call(arguments, err == null ? 1 : 0));
           } catch (e) { cb(e); }
         };
         fn.apply(null, args);
