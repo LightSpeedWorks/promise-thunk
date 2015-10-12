@@ -352,25 +352,56 @@ this.PromiseThunk = function () {
     if (typeof fn !== 'function')
       throw new TypeError('thunkify: argument must be a function');
 
+    // thunkified
     return function thunkified() {
-      var args = arguments;
-      return function thunk(cb) {
-        args[args.length++] = function callback(err, val) {
-          try {
-            return err instanceof Error || arguments.length === cb.length ? cb.apply(this, arguments) :
-              // normal node style callback
-              arguments.length === 2 ? cb(err, val) :
-              // fs.exists like callback, arguments[0] is value
-              arguments.length === 1 ? cb(null, arguments[0]) :
-              // unknown callback
-              arguments.length === 0 ? cb() :
-              // child_process.exec like callback
-              cb(null, slice.call(arguments, err == null ? 1 : 0));
-          } catch (e) { cb(e); }
-        };
-        fn.apply(null, args);
+      var ctx, result, callbacks = [], unhandled;
+      arguments[arguments.length++] = function callback(err, val) {
+        if (result) {
+          if (err)
+            console.error(COLOR_ERROR + 'Unhandled callback error: ' + err2str(err) + COLOR_NORMAL);
+          return;
+        }
+
+        ctx = this, result = arguments;
+        if (callbacks.length === 0 && err instanceof Error)
+          unhandled = true,
+          console.error(COLOR_ERROR + 'Unhandled callback error: ' + err2str(err) + COLOR_NORMAL);
+
+        for (var i = 0, n = callbacks.length; i < n; ++i)
+          fire(callbacks[i]);
+        callbacks = [];
       };
-    };
+      fn.apply(this, arguments);
+
+      // thunk
+      return function thunk(cb) {
+        if (typeof cb !== 'function')
+          throw new TypeError('argument must be a function');
+
+        if (unhandled)
+          unhandled = false,
+          console.error(COLOR_ERROR + 'Unhandled callback error handled: ' + err2str(result[0]) + COLOR_NORMAL);
+
+        if (result) return fire(cb);
+        callbacks.push(cb);
+      };
+
+      // fire
+      function fire(cb) {
+        var err = result[0], val = result[1];
+        try {
+          return err instanceof Error || result.length === cb.length ? cb.apply(ctx, result) :
+            // normal node style callback
+            result.length === 2 ? cb.call(ctx, err, val) :
+            // fs.exists like callback, arguments[0] is value
+            result.length === 1 ? cb.call(ctx, null, result[0]) :
+            // unknown callback
+            result.length === 0 ? cb.call(ctx) :
+            // child_process.exec like callback
+            cb.call(ctx, null, slice.call(result, err == null ? 1 : 0));
+        } catch (e) { cb.call(ctx, e); }
+      } // fire
+    }; // thunkified
   } // thunkify
 
   // PromiseThunk.resolve(val)
