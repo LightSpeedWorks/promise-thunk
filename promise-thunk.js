@@ -349,12 +349,13 @@ this.PromiseThunk = function () {
 	// PromiseThunk.thunkify(fn)
 	setValue(PromiseThunk, 'thunkify',  thunkify);
 	function thunkify(fn) {
+		var ctx = this;
 		if (typeof fn !== 'function')
 			throw new TypeError('thunkify: argument must be a function');
 
 		// thunkified
 		return function thunkified() {
-			var ctx, result, callbacks = [], unhandled;
+			var result, callbacks = [], unhandled;
 			arguments[arguments.length++] = function callback(err, val) {
 				if (result) {
 					if (err)
@@ -362,7 +363,7 @@ this.PromiseThunk = function () {
 					return;
 				}
 
-				ctx = this, result = arguments;
+				result = arguments;
 				if (callbacks.length === 0 && err instanceof Error)
 					unhandled = true,
 					console.error(COLOR_ERROR + 'Unhandled callback error: ' + err2str(err) + COLOR_NORMAL);
@@ -371,7 +372,7 @@ this.PromiseThunk = function () {
 					fire(callbacks[i]);
 				callbacks = [];
 			};
-			fn.apply(this, arguments);
+			fn.apply(ctx, arguments);
 
 			// thunk
 			return function thunk(cb) {

@@ -185,6 +185,14 @@ p(function (err, val) { console.info('val:', val, 'err:', err); })
 
   also thenable, yieldable, callable. same as wrap.
 
+#### postgres `pg` example:
+
+```js
+var pg = require('pg');
+var pg_connect = thunkify.call(pg, pg.connect);
+var client_query = thunkify.call(client, client.query);
+```
+
 ### promise.then(onFulfilled, onRejected)
 
 how to use promise.
