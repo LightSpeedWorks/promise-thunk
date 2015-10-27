@@ -322,6 +322,7 @@ this.PromiseThunk = function () {
 	setValue(PromiseThunk, 'promisify', promisify);
 	setValue(PromiseThunk, 'wrap',      promisify);
 	function promisify(fn) {
+		var ctx = this;
 		if (typeof fn !== 'function')
 			throw new TypeError('promisify: argument must be a function');
 
@@ -341,7 +342,7 @@ this.PromiseThunk = function () {
 							res(slice.call(arguments, err == null ? 1 : 0));
 					} catch (e) { rej(e); }
 				};
-				fn.apply(null, args);
+				fn.apply(ctx, args);
 			});
 		};
 	} // promisify
