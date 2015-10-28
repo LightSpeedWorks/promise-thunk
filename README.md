@@ -4,7 +4,7 @@
   ES6 Promise + Thunk = PromiseThunk!
 
   `promise-thunk` is standard ES6 Promise implementation + thunk.<br/>
-  it supports node.js/io.js.
+  it supports browsers and node.js.
 
   it throws unhandled rejection error.
 
@@ -14,7 +14,7 @@
 [![NPM](https://nodei.co/npm/promise-thunk.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/promise-thunk/)
 [![NPM](https://nodei.co/npm-dl/promise-thunk.png?height=2)](https://nodei.co/npm/promise-thunk/)
 
-for node.js or io.js
+for node.js:
 
 ```bash
 $ npm install promise-thunk --save
@@ -22,7 +22,7 @@ $ npm install promise-thunk --save
 
 or
 
-for browsers
+for browsers:
 
 [https://lightspeedworks.github.io/promise-thunk/promise-thunk.js](https://lightspeedworks.github.io/promise-thunk/promise-thunk.js)
 
@@ -33,6 +33,14 @@ for browsers
 # PREPARE:
 
 you can use PromiseThunk.
+
+in node.js
+
+```js
+var PromiseThunk = require('promise-thunk');
+```
+
+in browsers
 
 ```js
 (function (PromiseThunk) {
@@ -157,7 +165,7 @@ p.then(
 // thunk
 p(function (err, val) { console.info('val:', val, 'err:', err); });
 
-// mixed chanable
+// mixed chainable
 p(function (err, val) { console.info('val:', val, 'err:', err); })
 (function (err, val) { console.info('val:', val, 'err:', err); })
 (function (err, val) { console.info('val:', val, 'err:', err); })
@@ -173,24 +181,84 @@ p(function (err, val) { console.info('val:', val, 'err:', err); })
   function (err) { console.error('err:', err); });
 ```
 
-### PromiseThunk.convert(p) -> promise thunk
+### PromiseThunk.convert(p)
 
-  convert standard promise to promise thunk.
+  `convert()` converts standard promise to promise-thunk.
 
-### PromiseThunk.wrap(fn) -> function returns promise thunk
+  + `p`: standard promise or thenable object.
 
-  also thenable, yieldable, callable. same as thunkify.
+### PromiseThunk.promisify([ctx,] fn, [options])
 
-### PromiseThunk.thunkify(fn) -> function returns promise thunk
+  `promisify()` converts node style function into a function returns promise-thunk. <br>
+  you can use `fs.exists()` and `child_process.exec()` also.
 
-  also thenable, yieldable, callable. same as wrap.
+  + `ctx`: context object. default: this or undefined.
+  + `fn`: node-style normal function.
+  + `options`: options object.
+    + `conbtext`: context object.
+
+  also thenable, yieldable, callable.
 
 #### postgres `pg` example:
 
 ```js
 var pg = require('pg');
-var pg_connect = thunkify.call(pg, pg.connect);
-var client_query = thunkify.call(client, client.query);
+var pg_connect = promisify(pg, pg.connect);         // -> yield pg_connect()
+var client_query = promisify(client, client.query); // -> yield client_query()
+```
+
+### PromiseThunk.promisify(object, method, [postfix])
+
+  `promisify()` defines method promisified function returns promise-thunk.
+
+  + `object`: target object.
+  + `method`: method name string.
+  + `postfix`: method name postfix or suffix. default: 'A'.
+
+#### postgres `pg` example:
+
+```js
+var pg = require('pg');
+promisify(pg, 'connect');                  // -> yield pg.connectA()
+promisify(pg.Client.prototype, 'connect'); // -> yield client.connectA()
+promisify(pg.Client.prototype, 'query');   // -> yield client.queryA()
+```
+
+### PromiseThunk.thunkify([ctx,] fn, [options])
+
+  `thunkify()` converts node style function into a thunkified function. <br>
+  you can use `fs.exists()` and `child_process.exec()` also.
+
+  + `ctx`: context object. default: this or undefined.
+  + `fn`: node-style normal function with callback.
+  + `options`: options object.
+    + `conbtext`: context object.
+
+  also yieldable, callable.
+
+#### postgres `pg` example:
+
+```js
+var pg = require('pg');
+var pg_connect = thunkify(pg, pg.connect);         // -> yield pg_connect()
+var client_query = thunkify(client, client.query); // -> yield client_query()
+```
+
+### PromiseThunk.thunkify(object, method, [postfix])
+
+  `thunkify()` defines method thunkified function returns thunk.
+
+  + `object`: target object.
+  + `method`: method name string.
+  + `postfix`: method name postfix or suffix. default: 'A'.
+
+#### postgres `pg` example:
+
+```js
+var pg = require('pg');
+thunkify(pg, 'connect');                  // -> yield pg.connectA()
+thunkify(pg.Client.prototype, 'connect'); // -> yield client.connectA()
+thunkify(pg.Client.prototype, 'query');   // -> yield client.queryA()
 ```
 
 ### promise.then(onFulfilled, onRejected)

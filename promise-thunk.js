@@ -321,9 +321,25 @@ this.PromiseThunk = function () {
 	// PromiseThunk.promisify(fn)
 	setValue(PromiseThunk, 'promisify', promisify);
 	setValue(PromiseThunk, 'wrap',      promisify);
-	function promisify(fn) {
-		var ctx = this;
-		if (typeof arguments[1] === 'function') ctx = fn, fn = arguments[1];
+	function promisify(fn, options) {
+		if (arguments[0] && arguments[1] &&
+				typeof arguments[0] === 'object' &&
+				typeof arguments[1] === 'string') {
+			var object = arguments[0], method = arguments[1];
+			var postfix = typeof arguments[2] === 'string' ? arguments[2] : 'A';
+			var methodAcached = method + postfix + 'cached';
+			Object.defineProperty(object, method + postfix, {
+				get: function () {
+					return this[methodAcached] ? this[methodAcached] :
+						this[methodAcached] = promisify(this, this[method]);
+				}
+			});
+			return;
+		}
+
+		var ctx = typeof this !== 'function' ? this : undefined;
+		if (typeof options === 'function') ctx = fn, fn = options, options = arguments[2];
+		if (options && options.context) ctx = options.context;
 		if (typeof fn !== 'function')
 			throw new TypeError('promisify: argument must be a function');
 
@@ -350,9 +366,25 @@ this.PromiseThunk = function () {
 
 	// PromiseThunk.thunkify(fn)
 	setValue(PromiseThunk, 'thunkify',  thunkify);
-	function thunkify(fn) {
-		var ctx = this;
-		if (typeof arguments[1] === 'function') ctx = fn, fn = arguments[1];
+	function thunkify(fn, options) {
+		if (arguments[0] && arguments[1] &&
+				typeof arguments[0] === 'object' &&
+				typeof arguments[1] === 'string') {
+			var object = arguments[0], method = arguments[1];
+			var postfix = typeof arguments[2] === 'string' ? arguments[2] : 'A';
+			var methodAcached = method + postfix + 'cached';
+			Object.defineProperty(object, method + postfix, {
+				get: function () {
+					return this[methodAcached] ? this[methodAcached] :
+						this[methodAcached] = thunkify(this, this[method]);
+				}
+			});
+			return;
+		}
+
+		var ctx = typeof this !== 'function' ? this : undefined;
+		if (typeof options === 'function') ctx = fn, fn = options, options = arguments[2];
+		if (options && options.context) ctx = options.context;
 		if (typeof fn !== 'function')
 			throw new TypeError('thunkify: argument must be a function');
 
