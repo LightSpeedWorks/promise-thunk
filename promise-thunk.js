@@ -323,6 +323,7 @@ this.PromiseThunk = function () {
 	setValue(PromiseThunk, 'wrap',      promisify);
 	function promisify(fn) {
 		var ctx = this;
+		if (typeof arguments[1] === 'function') ctx = fn, fn = arguments[1];
 		if (typeof fn !== 'function')
 			throw new TypeError('promisify: argument must be a function');
 
@@ -351,6 +352,7 @@ this.PromiseThunk = function () {
 	setValue(PromiseThunk, 'thunkify',  thunkify);
 	function thunkify(fn) {
 		var ctx = this;
+		if (typeof arguments[1] === 'function') ctx = fn, fn = arguments[1];
 		if (typeof fn !== 'function')
 			throw new TypeError('thunkify: argument must be a function');
 
