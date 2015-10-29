@@ -207,21 +207,41 @@ var pg_connect = promisify(pg, pg.connect);         // -> yield pg_connect()
 var client_query = promisify(client, client.query); // -> yield client_query()
 ```
 
-### PromiseThunk.promisify(object, method, [postfix])
+### PromiseThunk.promisify(object, method, [options])
 
   `promisify()` defines method promisified function returns promise-thunk.
 
   + `object`: target object.
   + `method`: method name string.
-  + `postfix`: method name postfix or suffix. default: 'A'.
+  + `options`: method name postfix or suffix. default: 'Async'. or options object.
+    + `postfix`: method name postfix or suffix. default: 'Async'.
+    + `suffix`: method name postfix or suffix. default: 'Async'.
 
 #### postgres `pg` example:
 
 ```js
 var pg = require('pg');
-promisify(pg, 'connect');                  // -> yield pg.connectA()
-promisify(pg.Client.prototype, 'connect'); // -> yield client.connectA()
-promisify(pg.Client.prototype, 'query');   // -> yield client.queryA()
+promisify(pg, 'connect', 'A');             // -> yield pg.connectA()
+promisify(pg.Client.prototype, 'connect'); // -> yield client.connectAsync()
+promisify(pg.Client.prototype, 'query');   // -> yield client.queryAsync()
+```
+
+### PromiseThunk.promisifyAll(object, [options])
+
+  `promisifyAll()` defines all methods promisified function returns promise-thunk.
+
+  + `object`: target object.
+  + `options`: method name postfix or suffix. default: 'Async'. or options object.
+    + `postfix`: method name postfix or suffix. default: 'Async'.
+    + `suffix`: method name postfix or suffix. default: 'Async'.
+
+#### postgres `pg` example:
+
+```js
+var pg = require('pg');
+promisifyAll(pg.constructor.prototype, 'A');  // -> yield pg.connectA()
+promisifyAll(pg.Client.prototype);  // -> yield client.connectAsync()
+                                    // -> yield client.queryAsync()
 ```
 
 ### PromiseThunk.thunkify([ctx,] fn, [options])
@@ -244,21 +264,41 @@ var pg_connect = thunkify(pg, pg.connect);         // -> yield pg_connect()
 var client_query = thunkify(client, client.query); // -> yield client_query()
 ```
 
-### PromiseThunk.thunkify(object, method, [postfix])
+### PromiseThunk.thunkify(object, method, [options])
 
   `thunkify()` defines method thunkified function returns thunk.
 
   + `object`: target object.
   + `method`: method name string.
-  + `postfix`: method name postfix or suffix. default: 'A'.
+  + `options`: method name postfix or suffix. default: 'Async'. or options object.
+    + `postfix`: method name postfix or suffix. default: 'Async'.
+    + `suffix`: method name postfix or suffix. default: 'Async'.
 
 #### postgres `pg` example:
 
 ```js
 var pg = require('pg');
-thunkify(pg, 'connect');                  // -> yield pg.connectA()
-thunkify(pg.Client.prototype, 'connect'); // -> yield client.connectA()
-thunkify(pg.Client.prototype, 'query');   // -> yield client.queryA()
+thunkify(pg, 'connect', {postfix: 'A'});  // -> yield pg.connectA()
+thunkify(pg.Client.prototype, 'connect'); // -> yield client.connectAsync()
+thunkify(pg.Client.prototype, 'query');   // -> yield client.queryAsync()
+```
+
+### PromiseThunk.thunkifyAll(object, [options])
+
+  `thunkifyAll()` defines all methods thunkified function returns thunk.
+
+  + `object`: target object.
+  + `options`: method name postfix or suffix. default: 'Async'. or options object.
+    + `postfix`: method name postfix or suffix. default: 'Async'.
+    + `suffix`: method name postfix or suffix. default: 'Async'.
+
+#### postgres `pg` example:
+
+```js
+var pg = require('pg');
+thunkifyAll(pg.constructor.prototype, 'A');  // -> yield pg.connectA()
+thunkifyAll(pg.Client.prototype);  // -> yield client.connectAsync()
+                                   // -> yield client.queryAsync()
 ```
 
 ### promise.then(onFulfilled, onRejected)

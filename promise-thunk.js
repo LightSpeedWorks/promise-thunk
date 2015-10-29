@@ -29,15 +29,15 @@ this.PromiseThunk = function () {
 	// setConst(obj, prop, val)
 	var setConst = defProp ?
 		function setConst(obj, prop, val) {
-			defProp(obj, prop, {value: val}); } :
-		function setConst(obj, prop, val) { obj[prop] = val; };
+			defProp(obj, prop, {value: val}); return val; } :
+		function setConst(obj, prop, val) { return obj[prop] = val; };
 
 	// setValue(obj, prop, val)
 	var setValue = defProp ?
 		function setValue(obj, prop, val) {
 			defProp(obj, prop, {value: val,
-				writable: true, configurable: true}); } :
-		function setValue(obj, prop, val) { obj[prop] = val; };
+				writable: true, configurable: true}); return val; } :
+		function setValue(obj, prop, val) { return obj[prop] = val; };
 
 	// getProto(obj)
 	var getProto = Object.getPrototypeOf || {}.__proto__ ?
@@ -327,13 +327,18 @@ this.PromiseThunk = function () {
 				typeof arguments[0] === 'object' &&
 				typeof arguments[1] === 'string') {
 			var object = arguments[0], method = arguments[1];
-			var postfix = typeof arguments[2] === 'string' ? arguments[2] : 'Async';
+			var postfix = arguments[2] && typeof arguments[2] === 'string' ? arguments[2] :
+				arguments[2] && typeof arguments[2].postfix === 'string' ? arguments[2].postfix : 
+				arguments[2] && typeof arguments[2].suffix === 'string' ? arguments[2].suffix : 'Async';
 			var methodAcached = method + postfix + 'Cached';
 			Object.defineProperty(object, method + postfix, {
 				get: function () {
-					return this[methodAcached] ? this[methodAcached] :
-						this[methodAcached] = promisify(this, this[method]);
-				}
+					return this.hasOwnProperty(methodAcached) &&
+						typeof this[methodAcached] === 'function' ?
+						this[methodAcached] :
+						setValue(this, methodAcached, promisify(this, this[method]));
+				},
+				configurable: true
 			});
 			return;
 		}
@@ -377,13 +382,18 @@ this.PromiseThunk = function () {
 				typeof arguments[0] === 'object' &&
 				typeof arguments[1] === 'string') {
 			var object = arguments[0], method = arguments[1];
-			var postfix = typeof arguments[2] === 'string' ? arguments[2] : 'Async';
+			var postfix = arguments[2] && typeof arguments[2] === 'string' ? arguments[2] :
+				arguments[2] && typeof arguments[2].postfix === 'string' ? arguments[2].postfix : 
+				arguments[2] && typeof arguments[2].suffix === 'string' ? arguments[2].suffix : 'Async';
 			var methodAcached = method + postfix + 'Cached';
 			Object.defineProperty(object, method + postfix, {
 				get: function () {
-					return this[methodAcached] ? this[methodAcached] :
-						this[methodAcached] = thunkify(this, this[method]);
-				}
+					return this.hasOwnProperty(methodAcached) &&
+						typeof this[methodAcached] === 'function' ?
+						this[methodAcached] :
+						setValue(this, methodAcached, thunkify(this, this[method]));
+				},
+				configurable: true
 			});
 			return;
 		}
@@ -448,6 +458,38 @@ this.PromiseThunk = function () {
 			} // fire
 		}; // thunkified
 	} // thunkify
+
+	// PromiseThunk.promisifyAll(object, options)
+	setValue(PromiseThunk, 'promisifyAll', function promisifyAll(object, options) {
+		var keys = [];
+		if (Object.getOwnPropertyNames) keys = Object.getOwnPropertyNames(object);
+		else if (Object.keys) keys = Object.keys(object);
+		else for (var method in object) if (object.hasOwnProperty(method)) keys.push(i);
+
+		keys.forEach(function (method) {
+			if (typeof object[method] === 'function' &&
+					!object[method].promisified &&
+					!object[method].thunkified)
+				promisify(object, method, options);
+		});
+		return object;
+	});
+
+	// PromiseThunk.thunkifyAll(object, options)
+	setValue(PromiseThunk, 'thunkifyAll', function thunkifyAll(object, options) {
+		var keys = [];
+		if (Object.getOwnPropertyNames) keys = Object.getOwnPropertyNames(object);
+		else if (Object.keys) keys = Object.keys(object);
+		else for (var method in object) if (object.hasOwnProperty(method)) keys.push(i);
+
+		keys.forEach(function (method) {
+			if (typeof object[method] === 'function' &&
+					!object[method].promisified &&
+					!object[method].thunkified)
+				thunkify(object, method, options);
+		});
+		return object;
+	});
 
 	// PromiseThunk.resolve(val)
 	setValue(PromiseThunk, 'resolve', function resolve(val) {
