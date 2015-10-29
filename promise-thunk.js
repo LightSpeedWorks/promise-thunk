@@ -322,12 +322,13 @@ this.PromiseThunk = function () {
 	setValue(PromiseThunk, 'promisify', promisify);
 	setValue(PromiseThunk, 'wrap',      promisify);
 	function promisify(fn, options) {
+		// promisify(object target, string method, [string postfix]) : undefined
 		if (arguments[0] && arguments[1] &&
 				typeof arguments[0] === 'object' &&
 				typeof arguments[1] === 'string') {
 			var object = arguments[0], method = arguments[1];
-			var postfix = typeof arguments[2] === 'string' ? arguments[2] : 'A';
-			var methodAcached = method + postfix + 'cached';
+			var postfix = typeof arguments[2] === 'string' ? arguments[2] : 'Async';
+			var methodAcached = method + postfix + 'Cached';
 			Object.defineProperty(object, method + postfix, {
 				get: function () {
 					return this[methodAcached] ? this[methodAcached] :
@@ -337,13 +338,17 @@ this.PromiseThunk = function () {
 			return;
 		}
 
+		// promisify([object ctx,] function fn) : function
 		var ctx = typeof this !== 'function' ? this : undefined;
 		if (typeof options === 'function') ctx = fn, fn = options, options = arguments[2];
 		if (options && options.context) ctx = options.context;
 		if (typeof fn !== 'function')
 			throw new TypeError('promisify: argument must be a function');
 
-		return function promisified() {
+		// promisified
+		promisified.promisified = true;
+		return promisified;
+		function promisified() {
 			var args = arguments;
 			return PromiseThunk(function (res, rej) {
 				args[args.length++] = function callback(err, val) {
@@ -367,12 +372,13 @@ this.PromiseThunk = function () {
 	// PromiseThunk.thunkify(fn)
 	setValue(PromiseThunk, 'thunkify',  thunkify);
 	function thunkify(fn, options) {
+		// thunkify(object target, string method, [string postfix]) : undefined
 		if (arguments[0] && arguments[1] &&
 				typeof arguments[0] === 'object' &&
 				typeof arguments[1] === 'string') {
 			var object = arguments[0], method = arguments[1];
-			var postfix = typeof arguments[2] === 'string' ? arguments[2] : 'A';
-			var methodAcached = method + postfix + 'cached';
+			var postfix = typeof arguments[2] === 'string' ? arguments[2] : 'Async';
+			var methodAcached = method + postfix + 'Cached';
 			Object.defineProperty(object, method + postfix, {
 				get: function () {
 					return this[methodAcached] ? this[methodAcached] :
@@ -382,6 +388,7 @@ this.PromiseThunk = function () {
 			return;
 		}
 
+		// thunkify([object ctx,] function fn) : function
 		var ctx = typeof this !== 'function' ? this : undefined;
 		if (typeof options === 'function') ctx = fn, fn = options, options = arguments[2];
 		if (options && options.context) ctx = options.context;
@@ -389,7 +396,9 @@ this.PromiseThunk = function () {
 			throw new TypeError('thunkify: argument must be a function');
 
 		// thunkified
-		return function thunkified() {
+		thunkified.thunkified = true;
+		return thunkified;
+		function thunkified() {
 			var result, callbacks = [], unhandled;
 			arguments[arguments.length++] = function callback(err, val) {
 				if (result) {
