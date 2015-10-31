@@ -322,21 +322,18 @@ this.PromiseThunk = function () {
 	setValue(PromiseThunk, 'promisify', promisify);
 	setValue(PromiseThunk, 'wrap',      promisify);
 	function promisify(fn, options) {
-		// promisify(object target, string method, [string postfix]) : undefined
-		if (arguments[0] && arguments[1] &&
-				typeof arguments[0] === 'object' &&
-				typeof arguments[1] === 'string') {
-			var object = arguments[0], method = arguments[1];
-			var postfix = arguments[2] && typeof arguments[2] === 'string' ? arguments[2] :
-				arguments[2] && typeof arguments[2].postfix === 'string' ? arguments[2].postfix : 
-				arguments[2] && typeof arguments[2].suffix === 'string' ? arguments[2].suffix : 'Async';
-			var methodAcached = method + postfix + 'Cached';
-			Object.defineProperty(object, method + postfix, {
+		// promisify(object target, string method, [object options]) : undefined
+		if (fn && typeof fn === 'object' && options && typeof options === 'string') {
+			var object = fn, method = options, options = arguments[2];
+			var suffix = options && typeof options === 'string' ? options :
+				options && typeof options.suffix === 'string' ? options.suffix :
+				options && typeof options.postfix === 'string' ? options.postfix : 'Async';
+			var methodAsyncCached = method + suffix + 'Cached';
+			Object.defineProperty(object, method + suffix, {
 				get: function () {
-					return this.hasOwnProperty(methodAcached) &&
-						typeof this[methodAcached] === 'function' ?
-						this[methodAcached] :
-						setValue(this, methodAcached, promisify(this, this[method]));
+					return this.hasOwnProperty(methodAsyncCached) &&
+						typeof this[methodAsyncCached] === 'function' ? this[methodAsyncCached] :
+						setValue(this, methodAsyncCached, promisify(this, this[method]));
 				},
 				configurable: true
 			});
@@ -377,21 +374,18 @@ this.PromiseThunk = function () {
 	// PromiseThunk.thunkify(fn)
 	setValue(PromiseThunk, 'thunkify',  thunkify);
 	function thunkify(fn, options) {
-		// thunkify(object target, string method, [string postfix]) : undefined
-		if (arguments[0] && arguments[1] &&
-				typeof arguments[0] === 'object' &&
-				typeof arguments[1] === 'string') {
-			var object = arguments[0], method = arguments[1];
-			var postfix = arguments[2] && typeof arguments[2] === 'string' ? arguments[2] :
-				arguments[2] && typeof arguments[2].postfix === 'string' ? arguments[2].postfix : 
-				arguments[2] && typeof arguments[2].suffix === 'string' ? arguments[2].suffix : 'Async';
-			var methodAcached = method + postfix + 'Cached';
-			Object.defineProperty(object, method + postfix, {
+		// thunkify(object target, string method, [object options]) : undefined
+		if (fn && typeof fn === 'object' && options && typeof options === 'string') {
+			var object = fn, method = options, options = arguments[2];
+			var suffix = options && typeof options === 'string' ? options :
+				options && typeof options.suffix === 'string' ? options.suffix :
+				options && typeof options.postfix === 'string' ? options.postfix : 'Async';
+			var methodAsyncCached = method + suffix + 'Cached';
+			Object.defineProperty(object, method + suffix, {
 				get: function () {
-					return this.hasOwnProperty(methodAcached) &&
-						typeof this[methodAcached] === 'function' ?
-						this[methodAcached] :
-						setValue(this, methodAcached, thunkify(this, this[method]));
+					return this.hasOwnProperty(methodAsyncCached) &&
+						typeof this[methodAsyncCached] === 'function' ? this[methodAsyncCached] :
+						setValue(this, methodAsyncCached, thunkify(this, this[method]));
 				},
 				configurable: true
 			});
