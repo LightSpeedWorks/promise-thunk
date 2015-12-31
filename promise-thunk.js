@@ -49,29 +49,30 @@ this.PromiseThunk = function () {
 
 	// Queue
 	function Queue() {
-		this.tail = this.head = null;
+		this.tail = this.head = undefined;
 	}
 	// Queue#push(x)
 	setValue(Queue.prototype, 'push', function push(x) {
 		if (this.tail)
-			this.tail = this.tail[1] = [x, null];
+			this.tail = this.tail.next = {x:x, next:undefined};
 		else
-			this.tail = this.head = [x, null];
+			this.tail = this.head = {x:x, next:undefined};
 		return this;
 	});
 	// Queue#shift()
 	setValue(Queue.prototype, 'shift', function shift() {
-		if (!this.head) return null;
-		var x = this.head[0];
-		this.head = this.head[1];
-		if (!this.head) this.tail = null;
+		if (!this.head) return undefined;
+		var x = this.head.x;
+		this.head = this.head.next;
+		if (!this.head) this.tail = undefined;
 		return x;
 	});
 
 	// nextTickDo(fn)
 	var nextTickDo = typeof setImmediate === 'function' ? setImmediate :
-		typeof process === 'object' && process && typeof process.nextTick === 'function' ? process.nextTick :
-		function nextTick(fn) { setTimeout(fn, 0); };
+		typeof process === 'object' && process &&
+		typeof process.nextTick === 'function' ? process.nextTick :
+		function nextTickDo(fn) { setTimeout(fn, 0); };
 
 	var tasksHighPrio = new Queue();
 	var tasksLowPrio = new Queue();
