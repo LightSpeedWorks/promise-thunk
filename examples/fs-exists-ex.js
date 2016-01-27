@@ -22,35 +22,49 @@
 	console.log('---- start');
 	var n = 0;
 
-	++n;
-	existsThunk(file)(function (err, val) {
-		console.log(color(32) + '---- thunk   type:%s, value:%s %s %s', typeof val, val, err ? err : '', color());
-	});
-	++n;
-	existsThunk(file)(function (val) {
-		console.log(color(32) + '---- thunk   type:%s, value:%s %s', typeof val, val, color());
-	});
+	setTimeout(function () {
+		++n;
+		existsThunk(file)(function (err, val) {
+			console.log(color(32) + '---- thunk   type:%s, value:%s %s %s', typeof val, val, err ? err : '', color());
+			setTimeout(end, 200);
+		});
+	}, 100);
 
-	++n;
-	existsPromise(file).then(function (val) {
-		console.log(color(36) + '---- promise type:%s, value:%s', typeof val, val + color());
-	},
-	function (err) {
-		console.log(color(36) + '---- promise error', err);
-		console.log('---- promise' + color());
-	}).then(end);
+	setTimeout(function () {
+		++n;
+		existsThunk(file)(function (val) {
+			console.log(color(32) + '---- thunk   type:%s, value:%s %s', typeof val, val, color());
+			setTimeout(end, 200);
+		});
+	}, 200);
 
-	++n;
-	existsPromise(file)(function (err, val) {
-		console.log(color(35) + '---- promise type:%s, value:%s %s %s', typeof val, val, err ? err : '', color());
-	});
-	++n;
-	existsPromise(file)(function (val) {
-		console.log(color(35) + '---- promise type:%s, value:%s %s', typeof val, val, color());
-	});
+	setTimeout(function () {
+		++n;
+		existsPromise(file).then(function (val) {
+			console.log(color(36) + '---- promise type:%s, value:%s', typeof val, val + color());
+		},
+		function (err) {
+			console.log(color(36) + '---- promise error', err);
+			console.log('---- promise' + color());
+		}).then(end);
+	}, 300);
 
-	function end() {
-		if (--n === 0) console.log('---- end');
-	}
+	setTimeout(function () {
+		++n;
+		existsPromise(file)(function (err, val) {
+			console.log(color(35) + '---- promise type:%s, value:%s %s %s', typeof val, val, err ? err : '', color());
+			setTimeout(end, 200);
+		});
+	}, 400);
+
+	setTimeout(function () {
+		++n;
+		existsPromise(file)(function (val) {
+			console.log(color(35) + '---- promise type:%s, value:%s %s', typeof val, val, color());
+			setTimeout(end, 200);
+		});
+	}, 500);
+
+	function end() { --n || console.log('---- end'); }
 
 })();

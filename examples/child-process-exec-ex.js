@@ -28,9 +28,9 @@
 			console.log(color(32) + '---- thunk   type:%s, class:%s', typeof val, val && val.constructor.name);
 			console.log(val);
 			console.log('---- thunk' + color());
-			end();
+			setTimeout(end, 200);
 		});
-	}, 10);
+	}, 100);
 
 	setTimeout(function () {
 		++n;
@@ -38,9 +38,9 @@
 			console.log(color(32) + '---- thunk   type:%s, stdout:%j', typeof stdout, stdout);
 			console.log('---- thunk   type:%s, stderr:%j', typeof stderr, stderr);
 			console.log('---- thunk' + color());
-			end();
+			setTimeout(end, 200);
 		});
-	}, 20);
+	}, 200);
 
 	setTimeout(function () {
 		++n;
@@ -53,7 +53,7 @@
 			console.log(color(36) + '---- promise error', err);
 			console.log('---- promise' + color());
 		}).then(end);
-	}, 30);
+	}, 300);
 
 	setTimeout(function () {
 		++n;
@@ -61,9 +61,9 @@
 			console.log(color(35) + '---- promise type:%s, class:%s',typeof val, val && val.constructor.name);
 			console.log(err ? err : '', val);
 			console.log('---- promise' + color());
-			end();
+			setTimeout(end, 200);
 		});
-	}, 40);
+	}, 400);
 
 	setTimeout(function () {
 		++n;
@@ -71,12 +71,10 @@
 			console.log(color(35) + '---- promise  type:%s, stdout:%j', typeof stdout, stdout);
 			console.log('---- promise type:%s, stderr:%j', typeof stderr, stderr);
 			console.log('---- promise' + color());
-			end();
+			setTimeout(end, 200);
 		});
-	}, 50);
+	}, 500);
 
-	function end() {
-		if (--n === 0) console.log('---- end');
-	}
+	function end() { --n || console.log('---- end'); }
 
 })();

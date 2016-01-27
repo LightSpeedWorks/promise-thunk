@@ -80,23 +80,23 @@
 
 	var sleep5 = PromiseThunk.wrap(sleep1);
 
-	sleep1(1000, 'sleep1 ', function (err, val) { console.log('sleep1 ', err, val, 101); });
-	sleep2(1000, 'sleep2 ')(function (err, val) { console.log('sleep2 ', err, val, 201); });
-	sleep3(1000, 'sleep3 ')(function (err, val) { console.log('sleep3 ', err, val, 301); });
+	sleep1(1100, 'sleep1 ', function (err, val) { console.log('sleep1 ', err, val, 101); });
+	sleep2(1200, 'sleep2 ')(function (err, val) { console.log('sleep2 ', err, val, 201); });
+	sleep3(1300, 'sleep3 ')(function (err, val) { console.log('sleep3 ', err, val, 301); });
 
-	sleep4(1000, 'sleep4 ').then(
+	sleep4(1400, 'sleep4 ').then(
 		function (val) { console.log('sleep4 ', null, val, 401); },
 		function (err) { console.log('sleep4  err =', err, 402); });
 
-	sleep5(1000, 'sleep5a')
+	sleep5(1500, 'sleep5a')
 	(function (err, val) { console.log('sleep5a', err, val, 501); })
 	.catch(function (err) { console.log('sleep5a err =', err, 502); });
 
-	sleep5(1000, 'sleep5b').then(
+	sleep5(1600, 'sleep5b').then(
 		function (val) { console.log('sleep5b', null, val, 505); },
 		function (err) { console.log('sleep5b err =', err, 506); });
 
-	var p5 = sleep5(1000, 'sleep5 ')
+	var p5 = sleep5(1700, 'sleep5 ')
 	(function (err, val) { console.log('sleep5u', err, val, 510); return 'sleep5u'; })
 	(function (err, val) { console.log('sleep5v', err, val, 520); return 'sleep5v'; })
 	(function (err, val) { console.log('sleep5w', err, val, 530); return 'sleep5w'; })
