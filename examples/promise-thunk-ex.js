@@ -129,7 +129,7 @@
     console.log('', new PromiseThunk(function (res, rej) { res('PromiseThunk.resolve'); }));
     console.log('', PromiseThunk.reject(new Error('PromiseThunk.reject'))(callback));
     console.log('', new PromiseThunk(function (res, rej) { rej(new Error('PromiseThunk.reject')); })(callback));
-    console.log('', PromiseThunk(function (res, rej) { res('PromiseThunk()'); }));
+    console.log('', new PromiseThunk(function (res, rej) { res('new PromiseThunk()'); }));
     console.log('', new PromiseThunk(function (res, rej) {}));
   }
 

@@ -17,7 +17,7 @@
 		return typeof window !== 'undefined' ? '' : '\x1b[' + (x ? x : '') + 'm';
 	}
 
-	var cmd = process.platform === 'win32' ? 'cmd /c dir /b' : 'ls -l';
+	var cmd = process.platform === 'win32' ? 'cmd /c dir /b *.js' : 'ls -l *.js';
 
 	console.log('---- start');
 	var n = 0;
