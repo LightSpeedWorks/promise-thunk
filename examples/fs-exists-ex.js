@@ -26,7 +26,7 @@
 		++n;
 		existsThunk(file)(function (err, val) {
 			console.log(color(32) + '---- thunk   type:%s, value:%s %s %s', typeof val, val, err ? err : '', color());
-			setTimeout(end, 200);
+			setTimeout(end, 400);
 		});
 	}, 100);
 
@@ -34,7 +34,7 @@
 		++n;
 		existsThunk(file)(function (val) {
 			console.log(color(32) + '---- thunk   type:%s, value:%s %s', typeof val, val, color());
-			setTimeout(end, 200);
+			setTimeout(end, 400);
 		});
 	}, 200);
 
@@ -53,7 +53,7 @@
 		++n;
 		existsPromise(file)(function (err, val) {
 			console.log(color(35) + '---- promise type:%s, value:%s %s %s', typeof val, val, err ? err : '', color());
-			setTimeout(end, 200);
+			setTimeout(end, 400);
 		});
 	}, 400);
 
@@ -61,7 +61,7 @@
 		++n;
 		existsPromise(file)(function (val) {
 			console.log(color(35) + '---- promise type:%s, value:%s %s', typeof val, val, color());
-			setTimeout(end, 200);
+			setTimeout(end, 400);
 		});
 	}, 500);
 
