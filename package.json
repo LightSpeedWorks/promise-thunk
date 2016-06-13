@@ -1,8 +1,12 @@
 {
   "name": "promise-thunk",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Promise and thunk",
   "main": "promise-thunk.js",
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "^2.5.3"
+  },
   "scripts": {
     "test": "mocha"
   },
