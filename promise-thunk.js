@@ -3,6 +3,8 @@
 void function (global, PromiseOrg) {
 	'use strict';
 
+	var slice = [].slice;
+
 	var hasConsole = typeof console === 'object' && console !== null;
 	var hasConsoleWarn  = hasConsole && typeof console.warn  === 'function';
 	var hasConsoleError = hasConsole && typeof console.error === 'function';
@@ -378,7 +380,7 @@ void function (global, PromiseOrg) {
 			case 0: return $$resolve(this);
 			default: return err instanceof Error ?
 				$$reject(this, err) :
-				$$resolve(this, [].slice.call(arguments, 1));
+				$$resolve(this, slice.call(arguments, 1));
 		}
 	}
 
@@ -580,7 +582,7 @@ void function (global, PromiseOrg) {
 							// unknown callback
 							arguments.length === 0 ? res() :
 							// child_process.exec like callback
-							res([].slice.call(arguments, err == null ? 1 : 0));
+							res(slice.call(arguments, err == null ? 1 : 0));
 					} catch (e) { rej(e); }
 				};
 				fn.apply(ctx, args);
@@ -666,7 +668,7 @@ void function (global, PromiseOrg) {
 						// unknown callback
 						result.length === 0 ? cb.call(ctx) :
 						// child_process.exec like callback
-						cb.call(ctx, null, [].slice.call(result, err == null ? 1 : 0));
+						cb.call(ctx, null, slice.call(result, err == null ? 1 : 0));
 				} catch (e) { cb.call(ctx, e); }
 			} // fire
 		}; // thunkified
